@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Camera, X, ChevronDown, Check, Tag, Calendar, Layers, Image as ImageIcon, Zap, Edit3, AlertCircle } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
@@ -14,10 +14,12 @@ type Mode = 'add' | 'quick' | 'edit';
 export default function AddExhibit() {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
+  const location = useLocation();
   const { addExhibit, quickAddExhibit, updateExhibit, getExhibitById, checkExhibitStatus } = useMuseumStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [mode, setMode] = useState<Mode>('add');
+  const locationState = location.state as { quickMode?: boolean } | null;
+  const [mode, setMode] = useState<Mode>(locationState?.quickMode ? 'quick' : 'add');
   const [name, setName] = useState('');
   const [era, setEra] = useState('');
   const [material, setMaterial] = useState('');

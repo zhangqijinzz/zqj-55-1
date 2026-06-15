@@ -328,24 +328,15 @@ export default function CollectionList() {
         transition={{ delay: 0.3 }}
         className="fixed bottom-24 right-5 z-40 flex flex-col gap-3 items-end"
       >
-        <Link
-          to="/collection/add"
-          state={{ quickMode: true }}
+        <button
+          onClick={() => navigate('/collection/add', { state: { quickMode: true } })}
           className="group relative w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all btn-bounce"
-          onClick={(e) => {
-            e.preventDefault();
-            navigate('/collection/add');
-            setTimeout(() => {
-              const quickBtn = document.querySelector('button[class*="bg-amber-400"]') as HTMLButtonElement | null;
-              if (quickBtn) quickBtn.click();
-            }, 100);
-          }}
         >
           <Zap size={28} strokeWidth={2.5} />
           <div className="absolute right-full mr-3 whitespace-nowrap bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             快速记录（拍照暂存）
           </div>
-        </Link>
+        </button>
         <Link
           to="/collection/add"
           className="group relative w-14 h-14 bg-gradient-to-br from-mint-400 to-mint-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all btn-bounce"
