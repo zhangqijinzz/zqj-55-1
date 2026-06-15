@@ -1,3 +1,5 @@
+export type ExhibitStatus = 'pending' | 'complete';
+
 export interface Exhibit {
   id: string;
   name: string;
@@ -8,6 +10,7 @@ export interface Exhibit {
   notes: string;
   visitOrder: number;
   visitDate: string;
+  status: ExhibitStatus;
   createdAt: number;
   updatedAt: number;
 }

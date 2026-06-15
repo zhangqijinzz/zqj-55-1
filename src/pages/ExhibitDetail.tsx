@@ -11,6 +11,8 @@ import {
   ArrowRight,
   MapPin,
   Clock,
+  AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import { useMuseumStore } from '../store/useMuseumStore';
 import TagBadge from '../components/TagBadge';
@@ -82,8 +84,29 @@ export default function ExhibitDetail() {
           <ArrowLeft size={22} />
         </button>
         
+        {/* 状态标签 */}
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10">
+          {exhibit?.status === 'pending' ? (
+            <div className="bg-amber-400 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-medium shadow-lg">
+              <AlertCircle size={14} />
+              待完善信息
+            </div>
+          ) : (
+            <div className="bg-mint-500/80 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-medium backdrop-blur">
+              <CheckCircle2 size={14} />
+              信息完整
+            </div>
+          )}
+        </div>
+        
         {/* 编辑和删除按钮 */}
         <div className="absolute top-12 right-4 flex gap-2 z-10">
+          <button
+            onClick={() => navigate(`/collection/${id}/edit`)}
+            className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-white"
+          >
+            <Edit2 size={18} />
+          </button>
           <button
             onClick={() => setShowDeleteModal(true)}
             className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-white"
@@ -126,27 +149,60 @@ export default function ExhibitDetail() {
       >
         <div className="px-6 pt-6">
           {/* 标题 */}
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">{exhibit.name}</h1>
+          <h1 className={`text-2xl font-bold mb-2 ${!exhibit.name ? 'text-gray-400 italic' : 'text-gray-800'}`}>
+            {exhibit.name || '未命名展品'}
+          </h1>
+          
+          {exhibit.status === 'pending' && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3 mb-4"
+            >
+              <AlertCircle size={20} className="text-amber-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-amber-800 mb-1">信息待完善</p>
+                <p className="text-xs text-amber-700 mb-3">
+                  补充完整展品名称、年代、材质和标签后即可标记为已完善
+                </p>
+                <button
+                  onClick={() => navigate(`/collection/${id}/edit`)}
+                  className="w-full py-2.5 rounded-xl bg-amber-400 text-white font-medium text-sm flex items-center justify-center gap-1.5 hover:bg-amber-500 transition-colors"
+                >
+                  <Edit2 size={14} />
+                  立即完善信息
+                </button>
+              </div>
+            </motion.div>
+          )}
           
           {/* 基本信息卡片 */}
           <div className="bg-white rounded-2xl p-5 shadow-soft mt-5 paper-texture">
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-mint-100 rounded-xl flex items-center justify-center">
-                  <Calendar size={18} className="text-mint-600" />
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  exhibit.era ? 'bg-mint-100' : 'bg-gray-100'
+                }`}>
+                  <Calendar size={18} className={exhibit.era ? 'text-mint-600' : 'text-gray-400'} />
                 </div>
                 <div>
                   <p className="text-xs text-gray-400">年代</p>
-                  <p className="font-semibold text-gray-700">{exhibit.era}</p>
+                  <p className={`font-semibold ${exhibit.era ? 'text-gray-700' : 'text-gray-400 italic'}`}>
+                    {exhibit.era || '未填写'}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-coral-100 rounded-xl flex items-center justify-center">
-                  <Layers size={18} className="text-coral-600" />
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  exhibit.material ? 'bg-coral-100' : 'bg-gray-100'
+                }`}>
+                  <Layers size={18} className={exhibit.material ? 'text-coral-600' : 'text-gray-400'} />
                 </div>
                 <div>
                   <p className="text-xs text-gray-400">材质</p>
-                  <p className="font-semibold text-gray-700">{exhibit.material}</p>
+                  <p className={`font-semibold ${exhibit.material ? 'text-gray-700' : 'text-gray-400 italic'}`}>
+                    {exhibit.material || '未填写'}
+                  </p>
                 </div>
               </div>
             </div>

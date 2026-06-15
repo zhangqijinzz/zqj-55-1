@@ -47,6 +47,7 @@ function AppContent() {
             <Route path="/" element={<Home />} />
             <Route path="/collection" element={<CollectionList />} />
             <Route path="/collection/add" element={<AddExhibit />} />
+            <Route path="/collection/:id/edit" element={<AddExhibit />} />
             <Route path="/collection/:id" element={<ExhibitDetail />} />
             <Route path="/exhibitions" element={<ExhibitionList />} />
             <Route path="/exhibitions/create" element={<CreateExhibition />} />

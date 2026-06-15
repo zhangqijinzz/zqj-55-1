@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Exhibit, Exhibition, ChallengeRecord, AppState } from '../types';
+import type { Exhibit, Exhibition, ChallengeRecord, AppState, ExhibitStatus } from '../types';
 import { loadFromStorage, saveToStorage, generateId, getToday } from '../utils/storage';
 import { mockExhibits, mockExhibitions } from '../utils/mockData';
 
@@ -8,10 +8,13 @@ interface MuseumStore extends AppState {
   
   init: () => void;
   
-  addExhibit: (exhibit: Omit<Exhibit, 'id' | 'createdAt' | 'updatedAt' | 'visitOrder'>) => void;
+  addExhibit: (exhibit: Omit<Exhibit, 'id' | 'createdAt' | 'updatedAt' | 'visitOrder' | 'status'>) => void;
+  quickAddExhibit: (image: string) => void;
   updateExhibit: (id: string, updates: Partial<Exhibit>) => void;
   deleteExhibit: (id: string) => void;
   getExhibitById: (id: string) => Exhibit | undefined;
+  checkExhibitStatus: (exhibit: Partial<Exhibit>) => ExhibitStatus;
+  getPendingExhibitsCount: () => number;
   
   addExhibition: (exhibition: Omit<Exhibition, 'id' | 'createdAt' | 'updatedAt' | 'exhibitIds'>) => void;
   updateExhibition: (id: string, updates: Partial<Exhibition>) => void;
@@ -72,16 +75,53 @@ export const useMuseumStore = create<MuseumStore>((set, get) => ({
     });
   },
   
+  checkExhibitStatus: (exhibit) => {
+    const hasName = !!exhibit.name && exhibit.name.trim().length > 0;
+    const hasEra = !!exhibit.era && exhibit.era !== '未知' && exhibit.era.trim().length > 0;
+    const hasMaterial = !!exhibit.material && exhibit.material !== '未知' && exhibit.material.trim().length > 0;
+    const hasTags = Array.isArray(exhibit.tags) && exhibit.tags.length > 0;
+    return hasName && hasEra && hasMaterial && hasTags ? 'complete' : 'pending';
+  },
+  
   addExhibit: (exhibitData) => {
+    const { exhibits, checkExhibitStatus } = get();
+    const today = getToday();
+    const todayVisits = exhibits.filter(e => e.visitDate === today);
+    const visitOrder = todayVisits.length + 1;
+    
+    const status = checkExhibitStatus(exhibitData);
+    
+    const newExhibit: Exhibit = {
+      ...exhibitData,
+      id: generateId(),
+      visitOrder,
+      status,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    
+    const updated = [...exhibits, newExhibit];
+    set({ exhibits: updated });
+    saveToStorage(STORAGE_KEY_EXHIBITS, updated);
+  },
+  
+  quickAddExhibit: (image) => {
     const { exhibits } = get();
     const today = getToday();
     const todayVisits = exhibits.filter(e => e.visitDate === today);
     const visitOrder = todayVisits.length + 1;
     
     const newExhibit: Exhibit = {
-      ...exhibitData,
       id: generateId(),
+      name: '',
+      era: '',
+      material: '',
+      tags: [],
+      image,
+      notes: '',
       visitOrder,
+      visitDate: today,
+      status: 'pending',
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -92,10 +132,15 @@ export const useMuseumStore = create<MuseumStore>((set, get) => ({
   },
   
   updateExhibit: (id, updates) => {
-    const { exhibits } = get();
-    const updated = exhibits.map(e => 
-      e.id === id ? { ...e, ...updates, updatedAt: Date.now() } : e
-    );
+    const { exhibits, checkExhibitStatus } = get();
+    const updated = exhibits.map(e => {
+      if (e.id === id) {
+        const merged = { ...e, ...updates };
+        const status = checkExhibitStatus(merged);
+        return { ...merged, status, updatedAt: Date.now() };
+      }
+      return e;
+    });
     set({ exhibits: updated });
     saveToStorage(STORAGE_KEY_EXHIBITS, updated);
   },
@@ -222,7 +267,7 @@ export const useMuseumStore = create<MuseumStore>((set, get) => ({
           }
         }
       } else {
-        let yesterday = new Date();
+        const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
         
@@ -273,5 +318,10 @@ export const useMuseumStore = create<MuseumStore>((set, get) => ({
     const tagSet = new Set<string>();
     exhibits.forEach(e => e.tags.forEach(t => tagSet.add(t)));
     return Array.from(tagSet);
+  },
+  
+  getPendingExhibitsCount: () => {
+    const { exhibits } = get();
+    return exhibits.filter(e => e.status === 'pending').length;
   },
 }));
